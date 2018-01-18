@@ -5,7 +5,7 @@ Init    LDA #%01111111
         AND $D011
         STA $D011       ; Clear most significant bit in VIC's raster register
         
-        LDA #50
+        LDA #1
         STA $D012       ; Set the raster line number where interrupt should occur
         
         LDA #<Irq
@@ -16,11 +16,16 @@ Init    LDA #%01111111
         STA $D01A       ; Enable raster interrupt signals from VIC
         RTS             ; Initialization done; return to BASIC
 
-Irq     LDA #7
+Irq     LDA $d020       ; yellow
+        CMP #$f5         ; because when read, this will be F7 even when you put in 7
+        BEQ Black       ; if same go away
+
+Yellow  LDA #$f5
         STA $D020       ; Turn screen frame yellow
-        STA $D021       ; Turn screen frame yellow
-        LDA #0
+        ASL $D019       ; "Acknowledge" the interrupt by clearing the VIC's interrupt flag.
+        JMP $EA31       ; Jump into KERNAL's standard interrupt service routine to handle keyboard scan, cursor display etc.
+
+Black   LDA #14
         STA $D020       ; Switch frame color back to black
-        STA $D021       ; Switch color back to black
         ASL $D019       ; "Acknowledge" the interrupt by clearing the VIC's interrupt flag.
         JMP $EA31       ; Jump into KERNAL's standard interrupt service routine to handle keyboard scan, cursor display etc.
